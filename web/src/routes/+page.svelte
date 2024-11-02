@@ -1,9 +1,11 @@
-<h1>Welcome to SvelteKit</h1>
 <h1 class="text-3xl font-bold underline">Hello world!</h1>
 <p>
-  Visit <a class="btn btn-primary" href="https://svelte.dev/docs/kit"
-    >svelte.dev/docs/kit</a
-  > to read the documentation
+  <button class="btn btn-primary">Primary</button>
+  <button class="btn btn-neutral">Neutral</button>
+  <button class="btn btn-secondary">Secondary</button>
+  <button class="btn btn-accent">Accent</button>
+  <button class="btn btn-ghost">Ghost</button>
+  <button class="btn btn-link">Link</button>
 </p>
 
 <style lang="postcss">

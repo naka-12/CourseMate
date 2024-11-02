@@ -2,7 +2,7 @@
   import type { Snippet } from "svelte";
   const { children }: { children: Snippet } = $props();
 
-  import "../tailwind.css"
+  import "~/tailwind.css"
 </script>
 
 {@render children()}
