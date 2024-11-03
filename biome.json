@@ -10,6 +10,14 @@
     "useIgnoreFile": true
   },
   "files": {
-    "ignore": ["bun.lockb", "server/target", "data.json", "scraper/target"]
+    "ignore": [
+      "bun.lockb",
+      "server/target",
+      "data.json",
+      "scraper/target",
+      ".next",
+      "next-env.d.ts",
+      "package-lock.json"
+    ]
   }
 }
