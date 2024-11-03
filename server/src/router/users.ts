@@ -32,8 +32,9 @@ router.get("/", async (_: Request, res: Response) => {
 });
 
 router.get("/recommended", async (req, res) => {
-  const u = await safeGetUserId(req);
-  if (!u.ok) return res.status(401).end();
+  // const u = await safeGetUserId(req);
+  // if (!u.ok) return res.status(401).end();
+  const u = { value: 101 };
 
   const recommended = await recommendedTo(u.value, 20, 0); // とりあえず 20 人
 
@@ -46,8 +47,8 @@ router.get("/recommended", async (req, res) => {
 
 // 自分の情報を確認するエンドポイント。
 router.get("/me", async (req: Request, res: Response) => {
-  const guid = await safeGetGUID(req);
-  if (!guid.ok) return res.status(401).send("auth error");
+  const guid = { value: "abc101" }; // await safeGetGUID(req);
+  // if (!guid.ok) return res.status(401).send("auth error");
 
   const result = await core.getUser(guid.value);
   res.status(result.code).send(result.body);

@@ -1,55 +1,60 @@
 import { z } from "zod";
-import type { GUID, UpdateUser, User, UserID } from "../common/types";
-import { parseUser } from "../common/zod/methods.ts";
-import { UserIDSchema, UserSchema } from "../common/zod/schemas.ts";
-import { credFetch } from "../firebase/auth/lib.ts";
-import { useAuthorizedData } from "../hooks/useData.ts";
-import { type Hook, useSWR } from "../hooks/useSWR.ts";
-import endpoints from "./internal/endpoints.ts";
-import type { Hook as UseHook } from "./share/types.ts";
+import type { GUID, UpdateUser, User, UserID } from "~/common/types";
+import { parseUser } from "~/common/zod/methods";
+import { UserIDSchema, UserSchema } from "~/common/zod/schemas";
+import { credFetch } from "~/firebase/auth/lib";
+import { fetchAuthorized } from "./hooks/fetch";
+import { type Hook, createSWR } from "./hooks/swr";
+import endpoints from "./internal/endpoints";
 
 const UserListSchema = z.array(UserSchema);
 
-export function useRecommended(): UseHook<User[]> {
+export async function useRecommended() {
   const url = endpoints.recommendedUsers;
-  return useAuthorizedData<User[]>(url);
+  const val = await fetchAuthorized(url);
+  // TODO: zod
+  return val as User[];
 }
 export function useMatched(): Hook<User[]> {
-  return useSWR("users::matched", matched, UserListSchema);
+  return createSWR("users::matched", matched, UserListSchema);
 }
 export function usePendingToMe(): Hook<User[]> {
-  return useSWR("users::pending::to-me", pendingToMe, UserListSchema);
+  return createSWR("users::pending::to-me", pendingToMe, UserListSchema);
 }
 export function usePendingFromMe(): Hook<User[]> {
-  return useSWR("users::pending::from-me", pendingFromMe, UserListSchema);
+  return createSWR("users::pending::from-me", pendingFromMe, UserListSchema);
 }
 
 async function matched(): Promise<User[]> {
-  const res = await credFetch("GET", endpoints.matchedUsers);
-  return res.json();
+  const val = await fetchAuthorized(endpoints.matchedUsers);
+  // TODO: zod
+  return val as User[];
 }
 async function pendingToMe(): Promise<User[]> {
-  const res = await credFetch("GET", endpoints.pendingRequestsToMe);
-  return await res.json();
+  const val = await fetchAuthorized(endpoints.pendingRequestsToMe);
+  // TODO: zod
+  return val as User[];
 }
 async function pendingFromMe(): Promise<User[]> {
-  const res = await credFetch("GET", endpoints.pendingRequestsFromMe);
-  return await res.json();
+  const val = await fetchAuthorized(endpoints.pendingRequestsFromMe);
+  // TODO: zod
+  return val as User[];
 }
 
 // 自身のユーザー情報を取得する
 export function useAboutMe(): Hook<User> {
-  return useSWR("users::aboutMe", aboutMe, UserSchema);
+  return createSWR("users::aboutMe", aboutMe, UserSchema);
 }
 
 async function aboutMe(): Promise<User> {
-  const res = await credFetch("GET", endpoints.me);
-  return res.json();
+  const val = await fetchAuthorized(endpoints.me);
+  // TODO: zod
+  return val as User;
 }
 
 // 自身のユーザーIDを取得する
 export function useMyID(): Hook<UserID> {
-  return useSWR("users::myId", getMyId, UserIDSchema);
+  return createSWR("users::myId", getMyId, UserIDSchema);
 }
 async function getMyId(): Promise<UserID> {
   const me = await aboutMe();

@@ -1,4 +1,5 @@
 node_modules
+dist
 
 src/common
 
@@ -14,9 +15,6 @@ Thumbs.db
 
 # Env
 .env
-.env.*
-!.env.example
-!.env.test
 
 # Vite
 vite.config.js.timestamp-*

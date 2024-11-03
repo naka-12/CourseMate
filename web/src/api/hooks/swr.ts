@@ -1,5 +1,6 @@
 import { parse, stringify } from "devalue";
-import { useCallback, useEffect, useState } from "react";
+import { onMount } from "svelte";
+import { readable, writable, type Readable, type Writable } from "svelte/store";
 import type { ZodSchema } from "zod";
 
 // while using previous cache and (may or may not) waiting for fetch success
@@ -29,11 +30,17 @@ type Failed = {
 
 export type State<T> = Stale<T> | Loading | Success<T> | Failed;
 export type Hook<T> = {
-  state: State<T>;
+  state: Writable<State<T>>;
   reload: () => void;
-  write: (t: T) => void; // write to local cache, but not reload
 };
 
+namespace consts {
+  export const loading: Loading = {
+    data: null,
+    current: "loading",
+    error: null,
+  };
+}
 const SWR_PREFIX = "CourseMate::useSWR::";
 // todo: consider using useSWR Hook from external instead.
 /**
@@ -42,28 +49,29 @@ const SWR_PREFIX = "CourseMate::useSWR::";
  cacheKey **MUST** be unique in all the codebase, otherwise the cache will interfere each other.
  (I recommend using URL Path, friend's name + unique prefix, or randomly generate static string.)
  **/
-export function useSWR<T>(
+export function createSWR<T>(
   cacheKey: string,
   fetcher: () => Promise<T>,
   schema: Zod.Schema<T>,
 ): Hook<T> {
   const CACHE_KEY = SWR_PREFIX + cacheKey;
+  const state = writable<State<T>>(consts.loading, (set) => {
+    set(consts.loading);
+    onMount(() => {
+      set(loadOldData(CACHE_KEY, schema));
+    });
+  });
+  state.subscribe((val) => {
+    localStorage.setItem(CACHE_KEY, stringify(val));
+  });
 
-  const [state, setState] = useState<State<T>>(() =>
-    loadOldData(CACHE_KEY, schema),
-  );
-
-  const reload = useCallback(async () => {
-    setState((state) =>
-      state.data === null
-        ? {
-            current: "loading",
-            data: null,
-            error: null,
-          }
+  async function reload() {
+    state.update((current) =>
+      current.data === null
+        ? consts.loading
         : {
             current: "stale",
-            data: state.data,
+            data: current.data,
             error: null,
           },
     );
@@ -77,36 +85,27 @@ export function useSWR<T>(
         );
         console.log("data:", data);
       }
-      setState({
+      state.set({
         data: data,
         current: "success",
         error: null,
       });
-      localStorage.setItem(CACHE_KEY, stringify(data));
     } catch (e) {
-      setState({
+      state.set({
         data: null,
         current: "error",
         error: e as Error,
       });
     }
-  }, [CACHE_KEY, fetcher, schema]);
+  }
 
-  const write = useCallback(
-    (data: T) => {
-      localStorage.setItem(CACHE_KEY, stringify(data));
-    },
-    [CACHE_KEY],
-  );
-
-  useEffect(() => {
+  onMount(() => {
     go(reload);
-  }, [reload]);
+  });
 
   return {
     state,
     reload,
-    write,
   };
 }
 
@@ -134,11 +133,7 @@ function loadOldData<T>(
       };
     } catch {}
   }
-  return {
-    current: "loading",
-    data: null,
-    error: null,
-  };
+  return consts.loading;
 }
 
 function go(fn: () => Promise<void>) {

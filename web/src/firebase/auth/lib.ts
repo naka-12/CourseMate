@@ -21,6 +21,7 @@ async function refreshToken() {
 }
 
 export async function getIdToken(): Promise<IDToken> {
+  return "1"; // todo
   if (token) return token;
   await refreshToken();
   return token;
